@@ -36,20 +36,15 @@ class Card(object):
         if not suit:
             suit = Suit.SPADES
 
-        self.color = None        
         self.value = value
         self.suit = suit
 
     @property
-    def suit(self):
-        return self._suit
-    
-    @suit.setter
-    def suit(self, value):
-        self._suit = value
-        if value in [Suit.SPADES, Suit.CLUBS]:
-            self.color = Color.BLACK
-        elif value in [Suit.HEARTS, Suit.DIAMONDS]:
-            self.color = Color.RED
+    def color(self):
+        if self.suit in [Suit.SPADES, Suit.CLUBS]:
+            return Color.BLACK
+        elif self.suit in [Suit.HEARTS, Suit.DIAMONDS]:
+            return Color.RED
         else:
-            self.color = None
+            return None
+    
