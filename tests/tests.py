@@ -38,3 +38,11 @@ class TestCard(unittest.TestCase):
     def check_color_match_suit(self, value, suit, expected_color):
         card = freecell.Card(value, suit)
         self.assertEqual(card.color, expected_color)
+
+class TestBoard(unittest.TestCase):
+    def test_number_of_cards(self):
+        board = freecell.Board()
+        num_cards = 0
+        for cascade in board.cascades:
+            num_cards += len(cascade)
+        self.assertEqual(num_cards, 52)
