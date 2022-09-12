@@ -21,7 +21,25 @@ class Value(enum.IntEnum):
 
     @property
     def code(self):
-        return {Value.kA: "A"}
+        s = {
+            Value.kA: "A",
+            Value.k2: "2",
+            Value.k3: "3",
+            Value.k4: "4",
+            Value.k5: "5",
+            Value.k6: "6",
+            Value.k7: "7",
+            Value.k8: "8",
+            Value.k9: "9",
+            Value.k10: "10",
+            Value.kJ: "J",
+            Value.kQ: "Q",
+            Value.kK: "K",
+        }[self]
+        return f"{s:2}"
+
+    def __add__(self, val: int):
+        return Value(int(self) + val)
 
 
 @enum.unique
@@ -62,7 +80,7 @@ class Color(enum.Enum):
 
 
 class Card(object):
-    def __init__(self, value=None, suit=None):
+    def __init__(self, value: Value = None, suit: Value = None):
         if not value:
             value = Value.kA
 
@@ -85,14 +103,17 @@ class Card(object):
         val = f"{self.color.code}{self.value}{self.suit.code}{Color.NONE.code}"
         return val
 
+    def __add__(self, val: int):
+        return Card(val + 1, self.suit)
+
 
 class Foundation(object):
-    def __init__(self, card=None):
+    def __init__(self, card: Card = None):
         self.card = card
 
 
 class Cell(object):
-    def __init__(self, card=None):
+    def __init__(self, card: Card = None):
         self.card = card
 
 
@@ -102,7 +123,7 @@ class Cascade(list):
 
 class Board(object):
     def __init__(self):
-        self.foundations = [Foundation() for _ in range(4)]
+        self.foundations = dict([(suit, Foundation()) for suit in Suit])
         self.cells = [Cell() for _ in range(4)]
         self.cascades = [Cascade() for _ in range(8)]
 
@@ -111,3 +132,17 @@ class Board(object):
 
         for i, card in enumerate(deck):
             self.cascades[i % 8].append(card)
+
+    def cell2foundations(self, cell: Cell):
+        if cell.card is None:
+            raise ValueError
+
+        if self.foundations[cell.card.suit].card is None:
+            if cell.card.value != Value.kA:
+                raise ValueError
+
+        if self.foundations[cell.card.suit] + 1 != cell.card:
+            raise ValueError
+
+        self.foundations[cell.card.suit] = cell.card
+        cell.card = None
