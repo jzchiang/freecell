@@ -194,6 +194,31 @@ class Board(object):
         self.foundations[card.suit] = card
         cascade.pop(-1)
     
+    def cascade2cell(self, cascade: Cascade, cell: Cell):
+        if not self.is_valid_from_cascade(cascade):
+            raise ValueError
+        
+        card = cascade[-1]
+
+        if not self.is_valid_to_cell(cell):
+            raise ValueError
+        
+        cell.card = card
+        cascade.pop(-1)
+    
+    def cell2cascade(self, cell: Cell, cascade: Cascade):
+        if not self.is_valid_from_cell(cell):
+            raise ValueError
+        
+        card = cell.card
+
+        if not self.is_valid_to_foundations(card):
+            raise ValueError
+        
+        cascade.append(card)
+        cell.card = None
+
+    
     def __repr__(self):
         def _prettify(val):
             return f'{str(val):>18s}' if val is not None else ' '*4
