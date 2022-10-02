@@ -36,7 +36,7 @@ class Value(enum.IntEnum):
             Value.kQ: "Q",
             Value.kK: "K",
         }[self]
-        return f"{s:2}"
+        return f"{s:>2}"
 
     def __add__(self, val: int):
         return Value(int(self) + val)
@@ -103,8 +103,8 @@ class Card(object):
     def color(self) -> Color:
         return self.suit.color
 
-    def __repr__(self):
-        val = f"{self.color.code}{self.value}{self.suit.code}{Color.NONE.code}"
+    def __str__(self):
+        val = f"{self.color.code}{self.value.code}{self.suit.code}{Color.NONE.code}"
         return val
 
     def __add__(self, val: int):
@@ -193,3 +193,15 @@ class Board(object):
         
         self.foundations[card.suit] = card
         cascade.pop(-1)
+    
+    def __repr__(self):
+        def _prettify(val):
+            return f'{str(val):>18s}' if val is not None else ' '*4
+        # string length is crazy long because of color codes
+        foundations_string = ' '.join([_prettify(self.foundations[suit].card) for suit in Suit])
+        cell_string = ' '.join(_prettify(c.card) for c in self.cells)
+        n = max([len(x) for x in self.cascades])
+        cascadesT = [[ci[j] if j < len(ci) else None for ci in self.cascades] for j in range(n)]
+        cascades_string = '\n'.join([' '.join([_prettify(card) for card in c]) for c in cascadesT])
+
+        return f'{foundations_string} {cell_string}\n\n{cascades_string}'
