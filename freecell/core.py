@@ -43,6 +43,22 @@ class Value(enum.IntEnum):
 
 
 @enum.unique
+class Color(enum.Enum):
+    BLACK = enum.auto()
+    RED = enum.auto()
+    NONE = enum.auto()
+
+    @property
+    def code(self):
+        if self == Color.BLACK:
+            return "\x1b[1;30;47m"
+        elif self == Color.RED:
+            return "\x1b[1;31;47m"
+        else:
+            return "\x1b[0m"
+
+
+@enum.unique
 class Suit(enum.Enum):
     SPADES = enum.auto()
     HEARTS = enum.auto()
@@ -62,21 +78,14 @@ class Suit(enum.Enum):
         else:
             raise ValueError
 
-
-@enum.unique
-class Color(enum.Enum):
-    BLACK = enum.auto()
-    RED = enum.auto()
-    NONE = enum.auto()
-
     @property
-    def code(self):
-        if self == Color.BLACK:
-            return "\x1b[1;30;47m"
-        elif self == Color.RED:
-            return "\x1b[1;31;47m"
+    def color(self) -> Color:
+        if self in [Suit.SPADES, Suit.CLUBS]:
+            return Color.BLACK
+        elif self in [Suit.HEARTS, Suit.DIAMONDS]:
+            return Color.RED
         else:
-            return "\x1b[0m"
+            return None
 
 
 class Card(object):
@@ -91,13 +100,8 @@ class Card(object):
         self.suit = suit
 
     @property
-    def color(self):
-        if self.suit in [Suit.SPADES, Suit.CLUBS]:
-            return Color.BLACK
-        elif self.suit in [Suit.HEARTS, Suit.DIAMONDS]:
-            return Color.RED
-        else:
-            return None
+    def color(self) -> Color:
+        return self.suit.color
 
     def __repr__(self):
         val = f"{self.color.code}{self.value}{self.suit.code}{Color.NONE.code}"
@@ -133,16 +137,59 @@ class Board(object):
         for i, card in enumerate(deck):
             self.cascades[i % 8].append(card)
 
-    def cell2foundations(self, cell: Cell):
+    def is_valid_from_cascade(self, cascade: Cascade) -> bool:
+        if len(cascade) == 0:
+            return False
+        
+        return True
+    
+    def is_valid_from_cell(self, cell: Cell) -> bool:
         if cell.card is None:
+            return False
+        return True
+    
+    def is_valid_to_foundations(self, card: Card) -> bool:
+        if self.foundations[card.suit].card is None:
+            if card.value != Value.kA:
+                return False
+
+        if self.foundations[card.suit] + 1 != card:
+            return False
+        
+        return True
+    
+    def is_valid_to_cell(self, cell: Cell) -> bool:
+        return cell.card is None
+    
+    def is_valid_to_cascade(self, card: Card, cascade: Cascade) -> bool:
+        if len(cascade) == 0:
+            return True
+        
+        if card.color == cascade[-1].color and card.value + 1 == cascade[-1].value:
+            return True
+        
+        return False
+
+    def cell2foundations(self, cell: Cell):
+        if not self.is_valid_from_cell(cell):
+            raise ValueError
+        
+        card = cell.card
+
+        if not self.is_valid_to_foundations(card):
             raise ValueError
 
-        if self.foundations[cell.card.suit].card is None:
-            if cell.card.value != Value.kA:
-                raise ValueError
-
-        if self.foundations[cell.card.suit] + 1 != cell.card:
-            raise ValueError
-
-        self.foundations[cell.card.suit] = cell.card
+        self.foundations[card.suit] = card
         cell.card = None
+
+    def cascade2foundations(self, cascade: Cascade):
+        if not self.is_valid_from_cascade(cascade):
+            raise ValueError
+        
+        card = cascade[-1]
+
+        if not self.is_valid_to_foundations(card):
+            raise ValueError
+        
+        self.foundations[card.suit] = card
+        cascade.pop(-1)
